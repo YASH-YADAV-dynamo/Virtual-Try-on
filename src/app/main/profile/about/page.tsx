@@ -1,74 +1,32 @@
-import { ArrowLeft, FileText } from 'lucide-react';
-import { useRouter } from 'next/router';
+"use client";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ClipboardList } from "lucide-react";
 
-export default function About() {
+export default function AboutPage() {
   const router = useRouter();
 
-  const handleBack = () => {
-    router.back();
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="flex items-center px-4 py-4">
-          <button 
-            onClick={handleBack}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <h1 className="ml-4 text-xl font-semibold text-gray-900">About</h1>
-        </div>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* 🔹 Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-white shadow-sm rounded-b-xl">
+        <button
+          onClick={() => router.back()}
+          className="p-1 rounded-full hover:bg-gray-100"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-800" />
+        </button>
+        <h1 className="text-lg font-bold text-gray-900">About</h1>
+        <div className="w-5" /> {/* spacing placeholder */}
       </div>
 
-      {/* Content */}
-      <div className="px-4 pt-6">
-        {/* Version Section */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="flex items-center px-4 py-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mr-3">
-              <FileText className="w-5 h-5 text-gray-600" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-900 mb-1">Version</div>
-              <div className="text-sm text-gray-500">0.1.0</div>
-            </div>
+      {/* 🔹 Version Box */}
+      <div className="px-4 mt-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col">
+          <div className="flex items-center gap-2 mb-1">
+            <ClipboardList className="w-4 h-4 text-gray-700" />
+            <span className="text-sm font-medium text-gray-800">version</span>
           </div>
-        </div>
-
-        {/* Additional sections can be added here */}
-        {/* Example: App Info Section */}
-        <div className="mt-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-4 py-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">App Information</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              This application is designed to provide you with the best user experience. 
-              We regularly update the app to include new features and improvements.
-            </p>
-          </div>
-        </div>
-
-        {/* Developer Info Section */}
-        <div className="mt-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-4 py-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Developer</h3>
-            <p className="text-sm text-gray-500">
-              Built with Next.js and Tailwind CSS
-            </p>
-          </div>
-        </div>
-
-        {/* Terms and Privacy Section */}
-        <div className="mt-4 space-y-2">
-          <button className="w-full bg-white rounded-lg border border-gray-200 px-4 py-4 text-left hover:bg-gray-50 transition-colors">
-            <div className="text-sm font-medium text-gray-900">Terms of Service</div>
-          </button>
-          
-          <button className="w-full bg-white rounded-lg border border-gray-200 px-4 py-4 text-left hover:bg-gray-50 transition-colors">
-            <div className="text-sm font-medium text-gray-900">Privacy Policy</div>
-          </button>
+          <span className="text-sm text-gray-600">0.1.0</span>
         </div>
       </div>
     </div>

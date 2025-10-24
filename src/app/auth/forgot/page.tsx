@@ -1,7 +1,10 @@
 "use client";
+
 import React, { useState } from "react";
 import { IoArrowBack, IoMail } from "react-icons/io5";
 import toast, { Toaster } from "react-hot-toast";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/firebase/firebase"; // make sure this path is correct
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -24,11 +27,13 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      // 🔹 Send Firebase password reset email
+      await sendPasswordResetEmail(auth, email);
       setIsLoading(false);
-      setShowToast(true); // Show toast
 
-      // Show toast card
+      // 🔹 Show custom success toast
+      setShowToast(true);
       toast.custom(() => (
         <div className="fixed inset-0 z-50 flex items-start justify-center pointer-events-none">
           {/* Blurred backdrop */}
@@ -57,18 +62,22 @@ export default function ForgotPasswordPage() {
 
             {/* Button */}
             <button
-              onClick={() => window.open("mailto:", "_blank")}
+              onClick={() => window.open("mailto:" + email, "_blank")}
               className="w-full bg-black text-white py-3 rounded-full font-medium hover:bg-gray-800 transition-colors duration-200"
             >
-              Check Email
+              Open Mail App
             </button>
           </div>
         </div>
       ));
 
-      // Remove blur after toast disappears
-      setTimeout(() => setShowToast(false), 5000); // match toast duration
-    }, 500);
+      // 🔹 Remove blur after toast disappears
+      setTimeout(() => setShowToast(false), 5000);
+    } catch (err: any) {
+      console.error("Password reset error:", err);
+      toast.error(err?.message || "Failed to send reset email");
+      setIsLoading(false);
+    }
   };
 
   return (

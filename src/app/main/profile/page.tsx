@@ -13,7 +13,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   className="absolute left-3 text-xl"
-                  onClick={() => window.history.back()} // Go back
+                  onClick={() => window.history.back()} 
                 >
                   <IoArrowBack />
                 </button>
