@@ -230,7 +230,7 @@ export default function ProfilePage() {
         <ProfileItem
           icon={<Heart size={20} />}
           label="Favourites"
-          onClick={() => handleNavigation("/favourites")}
+          onClick={() => handleNavigation("/main/profile/favourites")}
         />
         <ProfileItem
           icon={<MapPin size={20} />}

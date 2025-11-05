@@ -37,7 +37,7 @@ export interface Favorite {
   name: string;
   image: string;
   category: string;
-  addedAt: any;
+  addedAt: string | null; // ISO string timestamp
 }
 
 export interface Feedback {
@@ -119,13 +119,27 @@ export async function addToFavorites(userId: string, product: Favorite): Promise
   try {
     const userDocRef = doc(firestore, "users", userId);
     
-    await updateDoc(userDocRef, {
-      favorites: arrayUnion({
-        ...product,
-        addedAt: serverTimestamp(),
-      }),
-    });
-  } catch (error) {
+    // Check if document exists first
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) {
+      // Create document if it doesn't exist
+      await setDoc(userDocRef, {
+        favorites: [{
+          ...product,
+          addedAt: new Date().toISOString(),
+        }],
+      });
+    } else {
+      // Use a regular timestamp instead of serverTimestamp() with arrayUnion
+      await updateDoc(userDocRef, {
+        favorites: arrayUnion({
+          ...product,
+          addedAt: new Date().toISOString(),
+        }),
+      });
+    }
+  } catch (error: any) {
     console.error("Error adding to favorites:", error);
     throw error;
   }

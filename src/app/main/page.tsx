@@ -4,10 +4,11 @@ import Image from "next/image";
 import { Search, ShoppingBag } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
-import { useWishlistStore } from "../store/wishlistStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { isAdmin } from "@/lib/firebase/products";
+import { useFirebaseWishlist } from "@/hooks/useFirebaseWishlist";
+import { toast } from "react-hot-toast";
 
 interface Product {
   id: number;
@@ -22,10 +23,27 @@ function HomePageContent() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const { wishlist, toggleWishlist } = useWishlistStore();
+  const { wishlist, toggleWishlist } = useFirebaseWishlist();
 
   // Check if current user is admin
   const isAdminUser = user && isAdmin(user.email);
+
+  // Handle wishlist toggle with product data
+  const handleWishlistToggle = async (product: Product) => {
+    if (!user) {
+      toast.error("Please login to add favorites");
+      return;
+    }
+
+    try {
+      await toggleWishlist(product.id, product);
+      const isAdding = !wishlist.includes(product.id);
+      toast.success(isAdding ? "Added to favorites!" : "Removed from favorites");
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      toast.error("Failed to update favorites");
+    }
+  };
 
   // ✅ Detect from where user came (dynamic)
   const [originTab, setOriginTab] = useState("single");
@@ -166,8 +184,9 @@ function HomePageContent() {
                   {product.name}
                 </p>
                 <button
-                  onClick={() => toggleWishlist(product.id)}
+                  onClick={() => handleWishlistToggle(product)}
                   className="text-gray-600 hover:scale-110 transition-all"
+                  title={wishlist.includes(product.id) ? "Remove from favorites" : "Add to favorites"}
                 >
                   {wishlist.includes(product.id) ? (
                     <AiFillHeart className="text-red-500 text-[22px]" />

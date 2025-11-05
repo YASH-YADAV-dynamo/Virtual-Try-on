@@ -58,7 +58,7 @@ export function useFirebaseWishlist() {
               name: product.name,
               image: product.image,
               category: product.category,
-              addedAt: null, // Will be set by Firebase
+              addedAt: null, // Will be set to ISO string by addToFavorites
             });
           } else {
             await removeFromFavorites(user.uid, productId);
