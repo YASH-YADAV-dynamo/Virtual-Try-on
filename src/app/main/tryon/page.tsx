@@ -146,12 +146,7 @@ function TryOnPageContent() {
           <TabsContent value="single">
             <Card
               className="border-dashed border-2 border-gray-300 rounded-lg mb-4 hover:bg-gray-50 cursor-pointer relative"
-              onClick={!lastGarment ? () => {
-                const input = document.getElementById(
-                  "galleryUploadSingle"
-                ) as HTMLInputElement | null;
-                input?.click();
-              } : undefined}
+              onClick={!lastGarment ? handleAddGarment : undefined}
             >
               {/* 🖼️ Gallery Icon (top-left) */}
               <button
@@ -301,12 +296,7 @@ function TryOnPageContent() {
                 ) : (
                   <Card
                     key={`empty-${index}`}
-                    onClick={() => {
-                      const input = document.getElementById(
-                        `galleryUploadMultiple-${index}`
-                      ) as HTMLInputElement | null;
-                      input?.click();
-                    }}
+                    onClick={handleAddGarment}
                     className="border-dashed border-2 border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer relative"
                   >
                     {/* 🖼️ Gallery Icon (top-left) */}
