@@ -16,11 +16,15 @@ export default function TryOnResultPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [buyLink, setBuyLink] = useState<string | null>(null);
+  const [productImage, setProductImage] = useState<string | null>(null);
 
   useEffect(() => {
     // Load try-on result from localStorage
     const savedResult = localStorage.getItem("tryonResult");
     const savedGarmentName = localStorage.getItem("tryonGarmentName");
+    const savedBuyLink = localStorage.getItem("tryonBuyLink");
+    const savedProductImage = localStorage.getItem("tryonProductImage");
 
     if (savedResult) {
       setResultUrl(savedResult);
@@ -28,6 +32,14 @@ export default function TryOnResultPage() {
 
     if (savedGarmentName) {
       setGarmentName(savedGarmentName);
+    }
+
+    if (savedBuyLink) {
+      setBuyLink(savedBuyLink);
+    }
+
+    if (savedProductImage) {
+      setProductImage(savedProductImage);
     }
   }, []);
 
@@ -236,7 +248,13 @@ export default function TryOnResultPage() {
   </button>
 
   <button
-    onClick={() => router.push("/main")}
+    onClick={() => {
+      if (buyLink) {
+        window.open(buyLink, "_blank", "noopener,noreferrer");
+      } else {
+        router.push("/main");
+      }
+    }}
     className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium"
   >
     Buy Now

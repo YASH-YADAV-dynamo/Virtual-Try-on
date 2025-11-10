@@ -124,6 +124,13 @@ function TryOnPageContent() {
       "tryonGarmentName",
       selectedGarmentForTryOn?.name || ""
     );
+    // Save buyLink and product image if available
+    if (selectedGarmentForTryOn?.buyLink) {
+      localStorage.setItem("tryonBuyLink", selectedGarmentForTryOn.buyLink);
+    }
+    if (selectedGarmentForTryOn?.image) {
+      localStorage.setItem("tryonProductImage", selectedGarmentForTryOn.image);
+    }
     // Close modal and redirect immediately
     setShowTryOnModal(false);
     router.push("/main/tryonresult");

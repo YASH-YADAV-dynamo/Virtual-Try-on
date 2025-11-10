@@ -15,6 +15,7 @@ interface Product {
   name: string;
   image: string;
   category: string;
+  buyLink?: string;
 }
 
 function HomePageContent() {
