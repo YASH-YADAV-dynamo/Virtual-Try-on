@@ -36,6 +36,7 @@ export default function ProfilePage() {
     loading: true,
   });
   const [fullProfile, setFullProfile] = useState<any>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     // Set photo from Firebase Auth or userProfile
@@ -276,9 +277,7 @@ export default function ProfilePage() {
         {/* Logout Button - Prominent at Bottom */}
         <div className="mt-6">
           <button
-            onClick={async () => {
-              await signOut();
-            }}
+            onClick={() => setShowLogoutModal(true)}
             className="w-full flex items-center justify-center gap-3 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl px-4 py-4 hover:bg-red-100 hover:border-red-300 transition font-medium shadow-sm"
           >
             <LogOut size={20} />
@@ -286,6 +285,37 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-in fade-in duration-200">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">
+              Are you sure you wanna logout?
+            </h2>
+            <p className="text-gray-600 text-center mb-6">
+              Let's try more outfits together
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  await signOut();
+                  setShowLogoutModal(false);
+                }}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

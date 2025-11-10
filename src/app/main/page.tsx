@@ -171,7 +171,7 @@ const filteredProducts = products.filter((p) => {
     ].map((video, index) => (
       <div
         key={index}
-        className="flex-shrink-0 w-full h-64 relative snap-center"
+        className="shrink-0 w-full h-64 relative snap-center"
       >
         <video
           src={video.src}
