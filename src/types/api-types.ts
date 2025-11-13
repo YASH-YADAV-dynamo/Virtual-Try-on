@@ -18,40 +18,48 @@ export type GarmentType =
 
 // IDM-VTON Parameters
 export interface IDMVTONParams {
-            garment_des?: string | null;
+  garment_des?: string | null;
   category: GarmentCategory;
-            mask_img?: string | null;
-            crop: boolean;
-            force_dc: boolean;
-            mask_only: boolean;
-            steps: number;
-            seed: number;
+  mask_img?: string | null;
+  crop: boolean;
+  force_dc: boolean;
+  mask_only: boolean;
+  steps: number;
+  seed: number;
+  guidance_scale?: number;
+  strength?: number;
 }
 
 // Image Upload Response
 export interface ImageUploadResponse {
-            url: string;
-            public_id: string;
-            message: string;
+  url: string;
+  public_id?: string;
+  message?: string;
+  filename?: string;
+  size?: number;
 }
 
 // Transform Response (Virtual Try-On & Layered Try-On)
 export interface TransformResponse {
-            id: string;
-            status: string;
-            output?: string | unknown[] | null;
-            error?: string | null;
-            model_used: string;
+  id: string;
+  status: "starting" | "processing" | "succeeded" | "failed" | "canceled";
+  output?: string | string[] | null;
+  error?: string | null;
+  model_used?: string;
+  progress?: number | null;
+  estimated_time?: number | null;
+  logs?: string[] | null;
 }
 
 // Video Response
 export interface VideoResponse {
-            id: string;
-            status: string;
-            video_url?: string | null;
-            error?: string | null;
-            progress?: number | null;
-            estimated_time?: number | null;
+  id: string;
+  status: "starting" | "processing" | "succeeded" | "failed" | "canceled";
+  video_url?: string | null;
+  error?: string | null;
+  progress?: number | null;
+  estimated_time?: number | null;
+  logs?: string[] | null;
 }
 
 // Virtual Try-On Request
@@ -82,15 +90,20 @@ export interface VideoGenerationRequest {
 
 // Health Response
 export interface HealthResponse {
-  status: string;
-  message: string;
-  app_name: string;
+  status: "healthy" | "unhealthy";
+  message?: string;
+  app_name?: string;
+  version?: string;
+  timestamp?: string;
 }
 
 // Garment Safety Check Response
 export interface GarmentSafetyResponse {
   allowed: boolean;
-  message: string;
+  message?: string;
+  reason?: string;
+  garment_type?: string;
+  category?: GarmentCategory;
 }
 
 // Export component types for backwards compatibility

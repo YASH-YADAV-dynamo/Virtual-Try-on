@@ -305,6 +305,20 @@ export default function TryOnModal({
                   alt="Try-on result"
                   fill
                   className="object-contain"
+                  unoptimized={resultUrl.includes('replicate.delivery')}
+                  onError={(e) => {
+                    console.error('Image load error:', e);
+                    const target = e.target as HTMLImageElement;
+                    if (target && target.parentElement) {
+                      const img = document.createElement('img');
+                      img.src = resultUrl;
+                      img.alt = "Try-on result";
+                      img.className = "object-contain w-full h-full";
+                      img.style.objectFit = "contain";
+                      target.parentElement.innerHTML = '';
+                      target.parentElement.appendChild(img);
+                    }
+                  }}
                 />
               </div>
 

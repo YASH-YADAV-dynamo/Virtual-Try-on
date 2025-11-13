@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Eye, Trash2, X, Sparkles, ImageIcon } from "lucide-react";
+import { Upload, Eye, Trash2, X, Sparkles, ImageIcon, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,45 +22,126 @@ function TryOnPageContent() {
   const [showTryOnModal, setShowTryOnModal] = useState(false);
   const [selectedGarmentForTryOn, setSelectedGarmentForTryOn] =
     useState<any>(null);
+  const [showModelUploadModal, setShowModelUploadModal] = useState(false);
+  const [showGarmentUploadModal, setShowGarmentUploadModal] = useState(false);
+  const [selectedGarmentSlot, setSelectedGarmentSlot] = useState<number | null>(null);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tryonProducts") || "[]");
-    setGarments(stored);
+    try {
+      const stored = JSON.parse(localStorage.getItem("tryonProducts") || "[]");
+      setGarments(stored);
+    } catch (error) {
+      console.error("Error reading garments from localStorage:", error);
+      setGarments([]);
+    }
 
     const tabFromURL = searchParams.get("tab");
     if (tabFromURL === "multiple" || tabFromURL === "single") {
       setTab(tabFromURL);
-      localStorage.setItem("originTab", tabFromURL);
+      try {
+        localStorage.setItem("originTab", tabFromURL);
+      } catch (error) {
+        console.error("Error saving tab to localStorage:", error);
+      }
     } else {
       const saved = localStorage.getItem("originTab");
       if (saved) setTab(saved);
     }
 
-    const savedModel = localStorage.getItem("modelImage");
-    if (savedModel) setModelImage(savedModel);
+    try {
+      const savedModel = localStorage.getItem("modelImage");
+      if (savedModel) setModelImage(savedModel);
+    } catch (error) {
+      console.error("Error reading model image from localStorage:", error);
+    }
   }, [searchParams]);
 
   const handleAddGarment = () => {
-    localStorage.setItem("originTab", tab);
+    try {
+      localStorage.setItem("originTab", tab);
+    } catch (error) {
+      console.error("Error saving tab to localStorage:", error);
+    }
     router.push(`/main?tab=${tab}`);
+  };
+
+  const handleGarmentCardClick = (slotIndex?: number) => {
+    setSelectedGarmentSlot(slotIndex ?? null);
+    setShowGarmentUploadModal(true);
   };
 
   const handleDeleteGarment = (index: number) => {
     const updated = garments.filter((_, i) => i !== index);
     setGarments(updated);
-    localStorage.setItem("tryonProducts", JSON.stringify(updated));
+    try {
+      localStorage.setItem("tryonProducts", JSON.stringify(updated));
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "QuotaExceededError") {
+        toast.error("Storage full. Please clear some space.");
+      } else {
+        console.error("Error saving to localStorage:", error);
+      }
+    }
   };
 
-  const handleModelUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress image to reduce localStorage size
+  const compressImage = (file: File, maxWidth: number = 1024, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Use HTMLImageElement constructor instead of Image from next/image
+        const img = document.createElement("img");
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleModelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        setModelImage(result);
-        localStorage.setItem("modelImage", result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedImage = await compressImage(file, 1024, 0.7);
+        setModelImage(compressedImage);
+        try {
+          localStorage.setItem("modelImage", compressedImage);
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "QuotaExceededError") {
+            toast.error("Storage full. Please clear some space or use a smaller image.");
+          } else {
+            console.error("Error saving to localStorage:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Error compressing image:", error);
+        toast.error("Failed to process image. Please try again.");
+      }
       // Reset input properly using ref
       if (modelInputRef.current) {
         modelInputRef.current.value = "";
@@ -74,22 +155,56 @@ function TryOnPageContent() {
     localStorage.removeItem("modelImage");
   };
 
-  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
+    
+    try {
+      // Compress image before storing
+      const compressedImage = await compressImage(file, 1024, 0.7);
       const newGarment = {
         id: Date.now(),
         name: file.name,
-        image: reader.result as string,
+        image: compressedImage,
       };
       const updatedGarments = [...garments, newGarment];
       setGarments(updatedGarments);
-      localStorage.setItem("tryonProducts", JSON.stringify(updatedGarments));
-      toast.success("Garment added from gallery!");
-    };
-    reader.readAsDataURL(file);
+      
+      try {
+        localStorage.setItem("tryonProducts", JSON.stringify(updatedGarments));
+        toast.success("Garment added from gallery!");
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "QuotaExceededError") {
+          // Remove oldest items if quota exceeded
+          const maxItems = 3; // Keep only last 3 items
+          if (updatedGarments.length > maxItems) {
+            const trimmedGarments = updatedGarments.slice(-maxItems);
+            setGarments(trimmedGarments);
+            try {
+              localStorage.setItem("tryonProducts", JSON.stringify(trimmedGarments));
+              toast.success("Garment added! (Removed older items to save space)");
+            } catch (retryError) {
+              toast.error("Storage full. Please clear some space or remove items.");
+              // Revert state
+              setGarments(garments);
+            }
+          } else {
+            toast.error("Storage full. Please clear some space or remove items.");
+            // Revert state
+            setGarments(garments);
+          }
+        } else {
+          console.error("Error saving to localStorage:", error);
+          toast.error("Failed to save garment. Please try again.");
+          // Revert state
+          setGarments(garments);
+        }
+      }
+    } catch (error) {
+      console.error("Error compressing image:", error);
+      toast.error("Failed to process image. Please try again.");
+    }
+    
     e.target.value = "";
   };
 
@@ -121,17 +236,25 @@ function TryOnPageContent() {
 
   const handleTryOnSuccess = (resultUrl: string) => {
     // Save to localStorage first
-    localStorage.setItem("tryonResult", resultUrl);
-    localStorage.setItem(
-      "tryonGarmentName",
-      selectedGarmentForTryOn?.name || ""
-    );
-    // Save buyLink and product image if available
-    if (selectedGarmentForTryOn?.buyLink) {
-      localStorage.setItem("tryonBuyLink", selectedGarmentForTryOn.buyLink);
-    }
-    if (selectedGarmentForTryOn?.image) {
-      localStorage.setItem("tryonProductImage", selectedGarmentForTryOn.image);
+    try {
+      localStorage.setItem("tryonResult", resultUrl);
+      localStorage.setItem(
+        "tryonGarmentName",
+        selectedGarmentForTryOn?.name || ""
+      );
+      // Save buyLink and product image if available
+      if (selectedGarmentForTryOn?.buyLink) {
+        localStorage.setItem("tryonBuyLink", selectedGarmentForTryOn.buyLink);
+      }
+      if (selectedGarmentForTryOn?.image) {
+        localStorage.setItem("tryonProductImage", selectedGarmentForTryOn.image);
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "QuotaExceededError") {
+        toast.error("Storage full. Result may not be saved. Please clear some space.");
+      } else {
+        console.error("Error saving try-on result to localStorage:", error);
+      }
     }
     // Close modal and redirect immediately
     setShowTryOnModal(false);
@@ -155,25 +278,8 @@ function TryOnPageContent() {
           <TabsContent value="single">
             <Card
               className="border-dashed border-2 border-gray-300 rounded-lg mb-4 hover:bg-gray-50 cursor-pointer relative"
-              onClick={!lastGarment ? handleAddGarment : undefined}
+              onClick={!lastGarment ? () => handleGarmentCardClick() : undefined}
             >
-              {/* 🖼️ Gallery Icon (top-left) */}
-              <button
-                type="button"
-                className="absolute top-2 left-2 bg-white/80 p-1 rounded-full shadow hover:bg-gray-100 z-[100]"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation(); // ✅ stop navigation
-                  const input = document.getElementById(
-                    "galleryUploadSingle"
-                  ) as HTMLInputElement | null;
-                  input?.click();
-                }}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <ImageIcon className="h-4 w-4 text-gray-600" />
-              </button>
-
               <input
                 type="file"
                 id="galleryUploadSingle"
@@ -230,7 +336,7 @@ function TryOnPageContent() {
             {/* Select Model */}
             <Card
               className="border-dashed border-2 border-gray-300 rounded-lg mb-6 hover:bg-gray-50 cursor-pointer relative"
-              onClick={() => modelInputRef.current?.click()}
+              onClick={() => setShowModelUploadModal(true)}
             >
               <CardContent className="flex flex-col items-center justify-center py-10 relative mt-5">
                 {modelImage ? (
@@ -306,26 +412,9 @@ function TryOnPageContent() {
                 ) : (
                   <Card
                     key={`empty-${index}`}
-                    onClick={handleAddGarment}
+                    onClick={() => handleGarmentCardClick(index)}
                     className="border-dashed border-2 border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer relative"
                   >
-                    {/* 🖼️ Gallery Icon (top-left) */}
-                    <button
-                      type="button"
-                      className="absolute top-2 left-2 bg-white/80 p-1 rounded-full shadow hover:bg-gray-100 z-[100]"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation(); // ✅ stop redirect
-                        const input = document.getElementById(
-                          `galleryUploadMultiple-${index}`
-                        ) as HTMLInputElement | null;
-                        input?.click();
-                      }}
-                      onMouseDown={(e) => e.stopPropagation()}
-                    >
-                      <ImageIcon className="h-4 w-4 text-gray-600" />
-                    </button>
-
                     <input
                       type="file"
                       id={`galleryUploadMultiple-${index}`}
@@ -348,7 +437,7 @@ function TryOnPageContent() {
             {/* Select Model */}
             <Card
               className="border-dashed border-2 border-gray-300 rounded-lg mb-6 hover:bg-gray-50 cursor-pointer relative "
-              onClick={() => modelInputRef.current?.click()}
+              onClick={() => setShowModelUploadModal(true)}
             >
               <CardContent className="flex flex-col items-center justify-center py-10 relative">
                 {modelImage ? (
@@ -424,6 +513,134 @@ function TryOnPageContent() {
                 fill
                 className="object-contain rounded-lg"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Model Upload Selection Modal */}
+      {showModelUploadModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Select Photo</h3>
+              <button
+                onClick={() => setShowModelUploadModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowModelUploadModal(false);
+                  modelInputRef.current?.click();
+                }}
+                className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+              >
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <ImageIcon className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-800">Select from Gallery</p>
+                  <p className="text-sm text-gray-500">Choose a photo from your device</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowModelUploadModal(false);
+                  try {
+                    localStorage.setItem("originTab", tab);
+                  } catch (error) {
+                    console.error("Error saving tab to localStorage:", error);
+                  }
+                  router.push(`/main?tab=${tab}`);
+                }}
+                className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
+              >
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <ShoppingBag className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-800">Select Product</p>
+                  <p className="text-sm text-gray-500">Browse products from store</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Garment Upload Selection Modal */}
+      {showGarmentUploadModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Add Garment</h3>
+              <button
+                onClick={() => {
+                  setShowGarmentUploadModal(false);
+                  setSelectedGarmentSlot(null);
+                }}
+                className="p-1 hover:bg-gray-100 rounded-full transition"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowGarmentUploadModal(false);
+                  // Open the appropriate file input based on slot
+                  if (selectedGarmentSlot !== null) {
+                    const input = document.getElementById(
+                      `galleryUploadMultiple-${selectedGarmentSlot}`
+                    ) as HTMLInputElement | null;
+                    input?.click();
+                  } else {
+                    const input = document.getElementById(
+                      "galleryUploadSingle"
+                    ) as HTMLInputElement | null;
+                    input?.click();
+                  }
+                  setSelectedGarmentSlot(null);
+                }}
+                className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+              >
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <ImageIcon className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-800">Gallery</p>
+                  <p className="text-sm text-gray-500">Upload from your device</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowGarmentUploadModal(false);
+                  try {
+                    localStorage.setItem("originTab", tab);
+                  } catch (error) {
+                    console.error("Error saving tab to localStorage:", error);
+                  }
+                  router.push(`/main?tab=${tab}`);
+                  setSelectedGarmentSlot(null);
+                }}
+                className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
+              >
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <ShoppingBag className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-800">Vizzle</p>
+                  <p className="text-sm text-gray-500">Browse products from store</p>
+                </div>
+              </button>
             </div>
           </div>
         </div>

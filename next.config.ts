@@ -53,6 +53,11 @@ const nextConfig: NextConfig = {
         hostname: 'graph.facebook.com',
       },
     ],
+    // Disable image optimization for replicate.delivery to avoid SSL certificate issues
+    // Images will be loaded directly from the source
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

@@ -32,11 +32,29 @@ export const apiClient = {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          error = { 
+            detail: `HTTP ${response.status}: ${response.statusText}`,
+            status_code: response.status 
+          };
+        }
         return { error };
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        return { 
+          error: { 
+            detail: 'Invalid JSON response from server',
+            status_code: response.status 
+          } 
+        };
+      }
       return { data };
     } catch (error) {
       return { error };
@@ -57,11 +75,29 @@ export const apiClient = {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          error = { 
+            detail: `HTTP ${response.status}: ${response.statusText}`,
+            status_code: response.status 
+          };
+        }
         return { error };
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        return { 
+          error: { 
+            detail: 'Invalid JSON response from server',
+            status_code: response.status 
+          } 
+        };
+      }
       return { data };
     } catch (error) {
       return { error };

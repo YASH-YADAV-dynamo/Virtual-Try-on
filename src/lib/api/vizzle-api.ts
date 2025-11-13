@@ -58,11 +58,21 @@ export async function uploadHumanImage(file: File): Promise<ImageUploadResponse>
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to upload human image');
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { detail: `HTTP ${response.status}: ${response.statusText}` };
+      }
+      throw new Error(errorData.detail || errorData.message || 'Failed to upload human image');
     }
 
-    return await response.json();
+    const result = await response.json();
+    // Ensure response matches ImageUploadResponse schema
+    if (!result.url) {
+      throw new Error('Invalid response: missing url field');
+    }
+    return result as ImageUploadResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
   }
@@ -82,11 +92,21 @@ export async function uploadGarmentImage(file: File): Promise<ImageUploadRespons
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to upload garment image');
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { detail: `HTTP ${response.status}: ${response.statusText}` };
+      }
+      throw new Error(errorData.detail || errorData.message || 'Failed to upload garment image');
     }
 
-    return await response.json();
+    const result = await response.json();
+    // Ensure response matches ImageUploadResponse schema
+    if (!result.url) {
+      throw new Error('Invalid response: missing url field');
+    }
+    return result as ImageUploadResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
   }
@@ -104,6 +124,13 @@ export async function performVirtualTryOn(
     });
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as TransformResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -127,6 +154,13 @@ export async function getVirtualTryOnStatus(
     );
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as TransformResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -150,6 +184,13 @@ export async function waitForVirtualTryOn(
     );
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as TransformResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -168,6 +209,13 @@ export async function performLayeredTryOn(
     });
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as TransformResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -191,6 +239,13 @@ export async function getLayeredTryOnStatus(
     );
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as TransformResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -214,6 +269,13 @@ export async function waitForLayeredTryOn(
     );
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as TransformResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -232,6 +294,13 @@ export async function generateVideo(
     });
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as VideoResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -253,6 +322,13 @@ export async function getVideoStatus(predictionId: string): Promise<VideoRespons
     );
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as VideoResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -274,6 +350,13 @@ export async function waitForVideo(predictionId: string): Promise<VideoResponse>
     );
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (!data.id || !data.status) {
+      throw new Error('Invalid response: missing required fields (id, status)');
+    }
+    
     return data as VideoResponse;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -294,6 +377,13 @@ export async function checkGarmentSafety(
     });
 
     if (error) throw new Error(handleApiError(error));
+    if (!data) throw new Error('No data received from API');
+    
+    // Validate response structure
+    if (typeof data.allowed !== 'boolean') {
+      throw new Error('Invalid response: missing required field (allowed)');
+    }
+    
     return data as GarmentSafetyResponse;
   } catch (error) {
     throw new Error(handleApiError(error));

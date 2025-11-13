@@ -188,6 +188,21 @@ export default function TryOnResultPage() {
               fill
               className="object-contain"
               priority
+              unoptimized={resultUrl.includes('replicate.delivery')}
+              onError={(e) => {
+                console.error('Image load error:', e);
+                // Fallback to regular img tag if Next Image fails
+                const target = e.target as HTMLImageElement;
+                if (target && target.parentElement) {
+                  const img = document.createElement('img');
+                  img.src = resultUrl;
+                  img.alt = "Try On Result";
+                  img.className = "object-contain w-full h-full";
+                  img.style.objectFit = "contain";
+                  target.parentElement.innerHTML = '';
+                  target.parentElement.appendChild(img);
+                }
+              }}
             />
           </div>
 

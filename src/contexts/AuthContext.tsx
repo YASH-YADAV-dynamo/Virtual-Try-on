@@ -11,6 +11,7 @@ interface UserProfile {
   lastName: string;
   gender: string;
   email: string;
+  phoneNumber?: string;
   providers: string[];
 }
 
