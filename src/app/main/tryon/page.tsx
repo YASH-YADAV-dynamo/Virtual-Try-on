@@ -22,7 +22,6 @@ function TryOnPageContent() {
   const [showTryOnModal, setShowTryOnModal] = useState(false);
   const [selectedGarmentForTryOn, setSelectedGarmentForTryOn] =
     useState<any>(null);
-  const [showModelUploadModal, setShowModelUploadModal] = useState(false);
   const [showGarmentUploadModal, setShowGarmentUploadModal] = useState(false);
   const [selectedGarmentSlot, setSelectedGarmentSlot] = useState<number | null>(null);
 
@@ -158,6 +157,10 @@ function TryOnPageContent() {
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Close modal after upload starts
+    setShowGarmentUploadModal(false);
+    setSelectedGarmentSlot(null);
     
     try {
       // Compress image before storing
@@ -336,7 +339,7 @@ function TryOnPageContent() {
             {/* Select Model */}
             <Card
               className="border-dashed border-2 border-gray-300 rounded-lg mb-6 hover:bg-gray-50 cursor-pointer relative"
-              onClick={() => setShowModelUploadModal(true)}
+              onClick={() => modelInputRef.current?.click()}
             >
               <CardContent className="flex flex-col items-center justify-center py-10 relative mt-5">
                 {modelImage ? (
@@ -437,7 +440,7 @@ function TryOnPageContent() {
             {/* Select Model */}
             <Card
               className="border-dashed border-2 border-gray-300 rounded-lg mb-6 hover:bg-gray-50 cursor-pointer relative "
-              onClick={() => setShowModelUploadModal(true)}
+              onClick={() => modelInputRef.current?.click()}
             >
               <CardContent className="flex flex-col items-center justify-center py-10 relative">
                 {modelImage ? (
@@ -513,62 +516,6 @@ function TryOnPageContent() {
                 fill
                 className="object-contain rounded-lg"
               />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Model Upload Selection Modal */}
-      {showModelUploadModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Select Photo</h3>
-              <button
-                onClick={() => setShowModelUploadModal(false)}
-                className="p-1 hover:bg-gray-100 rounded-full transition"
-              >
-                <X className="h-5 w-5 text-gray-600" />
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setShowModelUploadModal(false);
-                  modelInputRef.current?.click();
-                }}
-                className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
-              >
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <ImageIcon className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-gray-800">Select from Gallery</p>
-                  <p className="text-sm text-gray-500">Choose a photo from your device</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowModelUploadModal(false);
-                  try {
-                    localStorage.setItem("originTab", tab);
-                  } catch (error) {
-                    console.error("Error saving tab to localStorage:", error);
-                  }
-                  router.push(`/main?tab=${tab}`);
-                }}
-                className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
-              >
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <ShoppingBag className="h-5 w-5 text-purple-600" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-gray-800">Select Product</p>
-                  <p className="text-sm text-gray-500">Browse products from store</p>
-                </div>
-              </button>
             </div>
           </div>
         </div>
