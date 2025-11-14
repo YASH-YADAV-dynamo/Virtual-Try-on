@@ -188,7 +188,7 @@ export default function RegisterPage() {
               />
               <input
                 type="tel"
-                placeholder="6393849821"
+                placeholder="Enter phone number"
                 value={phoneNumber}
                 onChange={(e) => {
                   const value = e.target.value;
